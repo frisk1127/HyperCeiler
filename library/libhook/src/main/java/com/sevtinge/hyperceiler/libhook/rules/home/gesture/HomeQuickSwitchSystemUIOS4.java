@@ -50,6 +50,7 @@ public final class HomeQuickSwitchSystemUIOS4 extends BaseHook {
 
     @Override protected boolean useDexKit() { return true; }
     @Override protected boolean initDexKit() {
+        Os4BackFeedback.install();
         // Shell is an active shared library on this build, not part of SystemUI's base APK.
         // Enumerate PackageManager's installed source set; no vendor jar/class/path is pinned.
         try {

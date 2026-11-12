@@ -1,0 +1,6 @@
+id=hyperceiler_back_feedback
+name=HyperCeiler Back Gesture Feedback
+version=1.0
+versionCode=1
+author=Local patch
+description=Allow Launcher to connect to the authenticated SystemUI back-gesture preview socket.

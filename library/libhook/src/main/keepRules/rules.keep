@@ -38,3 +38,6 @@
 
 # --- Warnning ---
 -dontwarn android.os.ServiceManager
+# Keep the standalone SystemUI feedback entry available in patched builds.
+-keep class com.sevtinge.hyperceiler.libhook.rules.home.gesture.Os4BackFeedback { *; }
+-keep class com.sevtinge.hyperceiler.libhook.rules.home.gesture.BackHoldState { *; }

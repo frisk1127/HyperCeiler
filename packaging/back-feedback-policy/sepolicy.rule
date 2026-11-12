@@ -1,0 +1,1 @@
+allow platform_app_36 platform_app unix_stream_socket connectto

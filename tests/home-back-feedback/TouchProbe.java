@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
 import android.os.SystemClock;
 import android.view.InputEvent;
 import android.view.MotionEvent;
@@ -13,7 +14,9 @@ public final class TouchProbe {
         try {
             if (!Boolean.TRUE.equals(inject.invoke(manager, event, 2)))
                 throw new IllegalStateException("Input injection rejected");
-        } finally { event.recycle(); }
+        } finally {
+            event.recycle();
+        }
     }
     public static void main(String[] args) throws Exception {
         boolean right = args.length > 0 && args[0].equals("right");
@@ -30,7 +33,8 @@ public final class TouchProbe {
         event(0, x, 1250);
         for (int i = 1; i <= 12; i++) {
             x = right ? 1196 - i * distance / 12 : 4 + i * distance / 12;
-            event(2, x, 1250); SystemClock.sleep(step);
+            event(2, x, 1250);
+            SystemClock.sleep(step);
         }
         System.out.println("Holding at x=" + x);
         SystemClock.sleep(hold);
@@ -38,14 +42,16 @@ public final class TouchProbe {
             float deepest = x;
             for (int i = 1; i <= 6; i++) {
                 x = deepest + (right ? 1 : -1) * retreat * i / 6;
-                event(2, x, 1250); SystemClock.sleep(20);
+                event(2, x, 1250);
+                SystemClock.sleep(20);
             }
             SystemClock.sleep(450);
             if (finish.equals("rearm")) {
                 float withdrawn = x;
                 for (int i = 1; i <= 6; i++) {
                     x = withdrawn + (deepest - withdrawn) * i / 6;
-                    event(2, x, 1250); SystemClock.sleep(20);
+                    event(2, x, 1250);
+                    SystemClock.sleep(20);
                 }
                 SystemClock.sleep(650);
             }

@@ -546,7 +546,8 @@ constexpr size_t kBackArrowPathSlot = kRecentsHapticSlotBase + 7;
 constexpr size_t kBackArrowBitmapSlot = kBackArrowPathSlot + 1;
 constexpr size_t kBackArrowVsyncSlot = kBackArrowBitmapSlot + 1;
 constexpr size_t kBackArrowDestroySlot = kBackArrowVsyncSlot + 1;
-constexpr size_t kSlotCount = kBackArrowDestroySlot + 1;
+constexpr size_t kBackConfigurationSlot = kBackArrowDestroySlot + 1;
+constexpr size_t kSlotCount = kBackConfigurationSlot + 1;
 using Slot = nhk::InlineSlot<kPatchWords>;
 using Words = nhk::SlotWords<kPatchWords>;
 /* The companion slot's payload, declared here because `Words` only exists from this line down. */
@@ -2114,14 +2115,16 @@ std::optional<Located> locate() {
     if (const auto rust = open_library(*path, "libapp_launcher.so", all)) {
         if(!g_slots[kBackArrowPathSlot].backend_owned&&!g_slots[kBackArrowBitmapSlot].backend_owned) {
             auto arrow=home_back_arrow::resolve(rust->bytes);
-            uintptr_t a=0,b=0,c=0,d=0;nhk::CodeSource as{},bs{},cs{},ds{};Words aw{},bw{},cw{},dw{};
+            uintptr_t a=0,b=0,c=0,d=0,f=0;nhk::CodeSource as{},bs{},cs{},ds{},fs{};Words aw{},bw{},cw{},dw{},fw{};
             if(arrow&&bind_target(*rust,arrow->path,a,as,aw)&&bind_target(*rust,arrow->bitmap,b,bs,bw)
-                &&bind_target(*rust,arrow->vsync,c,cs,cw)&&bind_target(*rust,arrow->destroy,d,ds,dw)) {
+                &&bind_target(*rust,arrow->vsync,c,cs,cw)&&bind_target(*rust,arrow->destroy,d,ds,dw)
+                &&bind_target(*rust,arrow->imports[10],f,fs,fw)) {
                 hc_back_arrow_bind(rust->load_base,*arrow);
                 g_slots[kBackArrowPathSlot]={a,reinterpret_cast<void*>(hc_back_path_draw),&hc_back_path_draw_original,as,aw};
                 g_slots[kBackArrowBitmapSlot]={b,reinterpret_cast<void*>(hc_back_bitmap_draw),&hc_back_bitmap_draw_original,bs,bw};
                 g_slots[kBackArrowVsyncSlot]={c,reinterpret_cast<void*>(hc_back_view_vsync),&hc_back_view_vsync_original,cs,cw};
                 g_slots[kBackArrowDestroySlot]={d,reinterpret_cast<void*>(hc_back_view_destroy),&hc_back_view_destroy_original,ds,dw};
+                g_slots[kBackConfigurationSlot]={f,reinterpret_cast<void*>(hc_back_density),&hc_back_density_original,fs,fw};
                 __android_log_print(ANDROID_LOG_INFO,kTag,"native back arrow bound path=%p bitmap=%p",reinterpret_cast<void*>(a),reinterpret_cast<void*>(b));
             } else __android_log_print(ANDROID_LOG_WARN,kTag,"native back arrow contract unavailable");
         }
@@ -4869,7 +4872,7 @@ size_t arm_hooks(std::vector<size_t> &order) {
         if(g_slots[i].address&&std::find(order.begin(),order.end(),i)==order.end()){order.push_back(i);++added;}
     if(g_workspace_status_bound)for(unsigned i=0;i<3;++i){size_t index=kWorkspaceStatusSlotBase+i;
         if(g_slots[index].address&&std::find(order.begin(),order.end(),index)==order.end()){order.push_back(index);++added;}}
-    for (size_t index : {kHomeTouchSlot,kBackTouchSlot,kWorkspaceSceneSlot,kBackArrowPathSlot,kBackArrowBitmapSlot,kBackArrowVsyncSlot,kBackArrowDestroySlot})
+    for (size_t index : {kHomeTouchSlot,kBackTouchSlot,kWorkspaceSceneSlot,kBackArrowPathSlot,kBackArrowBitmapSlot,kBackArrowVsyncSlot,kBackArrowDestroySlot,kBackConfigurationSlot})
         if(g_slots[index].address && std::find(order.begin(),order.end(),index)==order.end()) {
             order.push_back(index);++added;
         }

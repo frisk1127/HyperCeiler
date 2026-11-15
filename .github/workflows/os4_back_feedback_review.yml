@@ -1,0 +1,38 @@
+name: OS4 Back Feedback Build Check
+
+on:
+  push:
+    branches: [ci/os4-back-feedback-review]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  assemble_debug:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    env:
+      GIT_ACTOR: ${{ github.actor }}
+      GIT_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: os4-back-feedback-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

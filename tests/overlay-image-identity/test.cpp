@@ -2,8 +2,8 @@
 #include "targets/home/tweaks/image.h"
 #include "nativehook/native_image.h"
 #include <elf.h>
-#include <fcntl.h>
-#include <fstream>
+#include <cstdio>
+#include <memory>
 #include <iostream>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -12,13 +12,14 @@ int main(int argc, char **argv) {
     if (argc != 3)
         return 2;
     const bool expected = std::string(argv[2]) == "ready";
-    const std::string path = argv[1];
+    const std::unique_ptr<std::FILE, decltype(&std::fclose)> fixture(std::fopen(argv[1], "rb"), &std::fclose);
+    if (!fixture)
+        return 2;
+    const int fd = fileno(fixture.get());
+    const std::string path = "/proc/self/fd/" + std::to_string(fd);
     for (const char *name : {"libapp.so", "libapp_launcher.so"}) {
         auto entry = nhk::zip_stored_entry(path, std::string("lib/arm64-v8a/") + name);
         if (!entry)
-            return 2;
-        int fd = open(path.c_str(), O_RDONLY | O_CLOEXEC);
-        if (fd < 0)
             return 2;
         std::array<std::byte, 8192> header{};
         if (pread(fd, header.data(), header.size(), entry->first) != ssize_t(header.size()))
@@ -39,13 +40,12 @@ int main(int argc, char **argv) {
                 continue;
             uint64_t offset = nhk::page_down(s.offset);
             size_t bytes = nhk::page_up(s.offset + s.filesz) - offset;
-            int protection = (s.flags & PF_R ? PROT_READ : 0) | (s.flags & PF_W ? PROT_WRITE : 0) |
-                             (s.flags & PF_X ? PROT_EXEC : 0);
+            int protection = ((s.flags & PF_R) ? PROT_READ : 0) | ((s.flags & PF_W) ? PROT_WRITE : 0) |
+                             ((s.flags & PF_X) ? PROT_EXEC : 0);
             if (mmap(reinterpret_cast<void *>(base + nhk::page_down(s.vaddr)), bytes, protection,
                      MAP_PRIVATE | MAP_FIXED, fd, entry->first + offset) == MAP_FAILED)
                 return 2;
         }
-        close(fd);
         home_layout_engine::Image image{};
         home_layout_engine::ImageDiscoveryDiagnostic diagnostic;
         bool ready = home_layout_engine::FindImageFromMappedApks(name, &image, &diagnostic);

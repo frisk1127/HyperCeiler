@@ -1,0 +1,41 @@
+name: Back Feedback Release APK
+
+on:
+  push:
+    branches: [ci/release-back-feedback-20261119]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    env:
+      GIT_ACTOR: ${{ github.actor }}
+      GIT_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: Verify back gesture hold and cancellation
+        run: python3 tests/home-back-feedback/run.py
+      - name: Build release APK
+        run: ./gradlew assembleRelease --stacktrace
+      - name: Upload release APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: HyperCeiler-back-feedback-release
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error

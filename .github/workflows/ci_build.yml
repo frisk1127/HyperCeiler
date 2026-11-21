@@ -84,28 +84,29 @@ jobs:
         shell: bash
         run: |
           ./gradlew assembleCanary
-          echo "IS_DEBUG=false" >> $GITHUB_ENV
+          echo "APK_VARIANT=canary" >> $GITHUB_ENV
 
       - name: Build with Gradle (Debug)
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main')
-        env:
-          GIT_ACTOR: ${{ github.actor }}
-          GIT_TOKEN: ${{ github.token }}
-        shell: bash
+        if: github.event_name == 'pull_request'
         env:
           GIT_ACTOR: ${{ github.actor }}
           GIT_TOKEN: ${{ github.token }}
         run: |
           ./gradlew assembleDebug
-          echo "IS_DEBUG=true" >> $GITHUB_ENV
+          echo "APK_VARIANT=debug" >> "$GITHUB_ENV"
+
+      - name: Build with Gradle (Release)
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        env:
+          GIT_ACTOR: ${{ github.actor }}
+          GIT_TOKEN: ${{ github.token }}
+        run: |
+          ./gradlew :app:assembleRelease
+          echo "APK_VARIANT=release" >> "$GITHUB_ENV"
 
       - name: Find APKs
         run: |
-          if [ ${{ env.IS_DEBUG }} = true ]; then
-            APK_FILE=$(find app/build/outputs/apk/debug -name '*.apk')
-          else
-            APK_FILE=$(find app/build/outputs/apk/canary -name '*.apk')
-          fi
+          APK_FILE=$(find "app/build/outputs/apk/$APK_VARIANT" -name '*.apk')
           echo "APK_FILE=$APK_FILE" >> $GITHUB_ENV
           echo "APK_FILE_NAME=$(basename $APK_FILE .apk)" >> $GITHUB_ENV
 
@@ -116,11 +117,7 @@ jobs:
           echo "|Artifact|SHA256|" >> $GITHUB_STEP_SUMMARY
           echo "|:---:|:---|" >> $GITHUB_STEP_SUMMARY
           APK_SHA256=($(shasum -a 256 ${{ env.APK_FILE }}))
-          if [ ${{ env.IS_DEBUG }} = true ]; then
-            echo "|Debug|$APK_SHA256" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "|Canary|$APK_SHA256" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "|$APK_VARIANT|$APK_SHA256" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload APKs
         uses: actions/upload-artifact@v7

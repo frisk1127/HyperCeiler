@@ -21,6 +21,7 @@ package com.sevtinge.hyperceiler.libhook.rules.systemframework.display
 import android.content.pm.ApplicationInfo
 import com.sevtinge.hyperceiler.libhook.base.BaseHook
 import com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.Miui.IS_INTERNATIONAL_BUILD
+import com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.System.isMoreHyperOSVersion
 import com.sevtinge.hyperceiler.libhook.utils.hookapi.LazyClass.clazzMiuiBuild
 import io.github.lingqiqi5211.ezhooktool.core.callMethod
 import io.github.lingqiqi5211.ezhooktool.core.findAllMethods
@@ -30,6 +31,10 @@ import io.github.lingqiqi5211.ezhooktool.xposed.dsl.setStaticBooleanField
 // from SetoHook by SetoSkins
 class AllDarkMode : BaseHook() {
     override fun init() {
+        if (isMoreHyperOSVersion(4f)) {
+            DarkModeAppsOS4.install()
+            return
+        }
         if (IS_INTERNATIONAL_BUILD) return
         val clazzForceDarkAppListManager =
             findClass("com.android.server.ForceDarkAppListManager")

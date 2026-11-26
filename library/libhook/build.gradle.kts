@@ -33,6 +33,11 @@ android {
         create("beta") {}
         create("canary") {}
     }
+    lint {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
 }
 
 java {
@@ -52,6 +57,9 @@ kotlin {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.18")
+
     api(libs.core)
     api(libs.fragment)
     api(libs.recyclerview)

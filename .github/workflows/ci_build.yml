@@ -88,6 +88,7 @@ jobs:
 
       - name: Build with Gradle (Debug)
         if: github.event_name == 'pull_request'
+        shell: bash
         env:
           GIT_ACTOR: ${{ github.actor }}
           GIT_TOKEN: ${{ github.token }}

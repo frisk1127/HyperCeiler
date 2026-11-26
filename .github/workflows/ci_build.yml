@@ -38,7 +38,7 @@ jobs:
           && !contains(github.event.head_commit.message, 'app: update version')
         )
       )
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     name: Build App
     permissions:
       contents: read
